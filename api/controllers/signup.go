@@ -16,15 +16,15 @@ func Signup(c *fiber.Ctx) error {
 
 	var newUser validator.UserModelValidator
 	if err := c.BodyParser(&newUser); err != nil {
-		return c.JSON(fiber.Map{
-			"res": "error a cargar los datos",
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"messages": "Bad Request",
 		})
 	}
 
 	if err := newUser.ValidateUserFind(); err != nil {
-		return c.JSON(fiber.Map{
-			"res": "malformed request",
-			"err": err,
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Bad Request",
+			"error":   err.Error(),
 		})
 	}
 
@@ -41,7 +41,6 @@ func Signup(c *fiber.Ctx) error {
 		},
 	}
 	var findUserInDbExist models.UserModel
-
 	err := db.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
 
 	if err != nil {
@@ -50,8 +49,9 @@ func Signup(c *fiber.Ctx) error {
 			passwordHash, err := helpers.HashPassword(newUser.Password)
 
 			if err != nil {
-				return c.JSON(fiber.Map{
-					"res": "server error",
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"message": "Internal Server Error",
+					"err":     err,
 				})
 			}
 
@@ -69,23 +69,26 @@ func Signup(c *fiber.Ctx) error {
 			modelNewUser.Youtube = newUser.Youtube
 
 			user, err := db.InsertOne(context.TODO(), modelNewUser)
+
 			if err != nil {
-				return c.JSON(fiber.Map{
-					"res": "error save user",
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"message": "Internal Server Error",
+					"err":     err,
 				})
 			}
-			return c.JSON(fiber.Map{
-				"res": user,
+			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				"message": user,
 			})
 
 		} else {
-			return c.JSON(fiber.Map{
-				"res": "server error",
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Internal Server Error",
+				"err":     err,
 			})
 		}
 	} else {
-		return c.JSON(fiber.Map{
-			"res": "exist NameUser or Email",
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+			"message": "exist NameUser or Email",
 		})
 	}
 

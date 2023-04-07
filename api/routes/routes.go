@@ -8,4 +8,5 @@ import (
 
 func UseRoutes(app *fiber.App) {
 	app.Post("/signup", controllers.Signup)
+	app.Post("/login", controllers.Login)
 }

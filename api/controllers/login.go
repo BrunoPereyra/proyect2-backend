@@ -1,0 +1,65 @@
+package controllers
+
+import (
+	"backend/api/helpers"
+	"backend/api/models"
+	"backend/api/validator"
+	"backend/database"
+	"backend/jwt"
+	"context"
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+func Login(c *fiber.Ctx) error {
+	var DataForLogin validator.LoginValidatorStruct
+	if err := c.BodyParser(&DataForLogin); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Bad Request",
+		})
+	}
+	if err := DataForLogin.LoginValidator(); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Bad Request",
+			"error":   err.Error(),
+		})
+	}
+
+	client := database.DB()
+	db := client.Database("goMoongodb").Collection("users")
+
+	findUserLogin := bson.D{
+		{Key: "nameuser", Value: DataForLogin.NameUser},
+	}
+	var result models.UserModel
+	err := db.FindOne(context.TODO(), findUserLogin).Decode(&result)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "User not found",
+			})
+		} else {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Internal Server Error",
+			})
+		}
+	}
+
+	if err := helpers.DecodePassword(result.PasswordHash, DataForLogin.Password); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
+	token, err := jwt.CreateToken(result)
+	if err != nil {
+		log.Fatal("Login,CreateTokenError", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Token created",
+		"token":   token,
+	})
+}
