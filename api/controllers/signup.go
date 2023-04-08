@@ -28,8 +28,8 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	client := database.DB()
-	db := client.Database("goMoongodb").Collection("users")
+	GoMongoDB := database.GoMongoDB()
+	GoMongoDBCollUsers := GoMongoDB.Collection("users")
 
 	findUserInDb := bson.D{
 		{
@@ -41,7 +41,7 @@ func Signup(c *fiber.Ctx) error {
 		},
 	}
 	var findUserInDbExist models.UserModel
-	err := db.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
+	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
 
 	if err != nil {
 
@@ -68,7 +68,7 @@ func Signup(c *fiber.Ctx) error {
 			modelNewUser.Twitter = newUser.Twitter
 			modelNewUser.Youtube = newUser.Youtube
 
-			user, err := db.InsertOne(context.TODO(), modelNewUser)
+			user, err := GoMongoDBCollUsers.InsertOne(context.TODO(), modelNewUser)
 
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

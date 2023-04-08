@@ -12,5 +12,5 @@ func UseRoutes(app *fiber.App) {
 	app.Post("/signup", controllers.Signup)
 	app.Post("/login", controllers.Login)
 
-	app.Post("/CreateEvent", middleware.UseExtractor(), controllers.CreateEvent)
+	app.Post("/CreateEvent", middleware.UseExtractor(), controllers.CreateChampionship)
 }

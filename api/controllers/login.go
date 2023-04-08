@@ -28,14 +28,15 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	client := database.DB()
-	db := client.Database("goMoongodb").Collection("users")
+	Database := database.GoMongoDB()
+
+	GoMongoDBCollUsers := Database.Collection("users")
 
 	findUserLogin := bson.D{
 		{Key: "nameuser", Value: DataForLogin.NameUser},
 	}
 	var result models.UserModel
-	err := db.FindOne(context.TODO(), findUserLogin).Decode(&result)
+	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserLogin).Decode(&result)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

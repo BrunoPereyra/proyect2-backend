@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Event struct {
+type Championships struct {
 	ID            string               `bson:"_id,omitempty"`
 	Creator       primitive.ObjectID   `bson:"creator"`
 	Description   string               `bson:"description"`
