@@ -10,8 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GoMongoDB() *mongo.Database {
-
+func GoMongoDB() (*mongo.Database, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("ApplyURI db error")
 	}
@@ -19,10 +18,20 @@ func GoMongoDB() *mongo.Database {
 
 	clientOptions := options.Client().ApplyURI(APPLYURI)
 
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	GoMongoDB := client.Database("goMoongodb")
+	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
-		log.Fatal("error conexion client db")
+		return nil, err
 	}
-	return GoMongoDB
+
+	// Se establece una conexión a la base de datos.
+	if err = client.Connect(context.Background()); err != nil {
+		return nil, err
+	}
+
+	// Se verifica que la conexión a la base de datos sea exitosa.
+	if err = client.Ping(context.Background(), nil); err != nil {
+		return nil, err
+	}
+
+	return client.Database("goMoongodb"), nil
 }

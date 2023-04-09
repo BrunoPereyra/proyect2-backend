@@ -1,44 +1,40 @@
 package controllers
 
 import (
+	"backend/api/helpers"
 	"backend/api/models"
 	"backend/api/validator"
 	"backend/database"
 	"context"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func CreateChampionship(c *fiber.Ctx) error {
-	dataMiddleware := c.Context().UserValue("nameUser")
-	Database := database.GoMongoDB()
 
-	GoMongoDBCollUsers := Database.Collection("users")
+	Database, errDB := database.GoMongoDB()
+	if errDB != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"message": "StatusServiceUnavailable",
+		})
+	}
 
 	// usuario del middleware existe?
-	find := bson.D{
-		{Key: "nameuser", Value: dataMiddleware},
-	}
-	var UserCreator models.UserModel
-	err := GoMongoDBCollUsers.FindOne(context.TODO(), find).Decode(&UserCreator)
+	dataMiddleware := c.Context().UserValue("nameUser")
+	dataMiddlewareString, _ := dataMiddleware.(string)
+
+	UserCreator, err := helpers.UserTMiddlExist(dataMiddlewareString, Database)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
-				"message": "user not found",
-			})
-		} else {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": "error server",
-			})
-		}
+		return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
+			"message": "user not found",
+		})
 	}
-	// ---------- 0 -------------
+
+	// creacion de championshipsValidate
 	var championshipsValidate validator.ChampionshipsValidate
 	if err := c.BodyParser(&championshipsValidate); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"messages": "Bad Request",
+			"message": "Bad Request",
 		})
 	}
 

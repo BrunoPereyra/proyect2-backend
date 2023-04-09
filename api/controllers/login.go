@@ -15,7 +15,9 @@ import (
 )
 
 func Login(c *fiber.Ctx) error {
+
 	var DataForLogin validator.LoginValidatorStruct
+
 	if err := c.BodyParser(&DataForLogin); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Bad Request",
@@ -28,10 +30,15 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	Database := database.GoMongoDB()
+	Database, errDB := database.GoMongoDB()
+	if errDB != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"message": "StatusServiceUnavailable",
+		})
+	}
 
+	// user exist?
 	GoMongoDBCollUsers := Database.Collection("users")
-
 	findUserLogin := bson.D{
 		{Key: "nameuser", Value: DataForLogin.NameUser},
 	}
@@ -49,7 +56,7 @@ func Login(c *fiber.Ctx) error {
 			})
 		}
 	}
-
+	//password incorrect
 	if err := helpers.DecodePassword(result.PasswordHash, DataForLogin.Password); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Unauthorized",

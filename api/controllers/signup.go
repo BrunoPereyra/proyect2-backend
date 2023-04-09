@@ -28,9 +28,14 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	GoMongoDB := database.GoMongoDB()
-	GoMongoDBCollUsers := GoMongoDB.Collection("users")
-
+	Database, errDB := database.GoMongoDB()
+	if errDB != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"message": "StatusServiceUnavailable",
+		})
+	}
+	// buscar usuario por name user or gmail
+	GoMongoDBCollUsers := Database.Collection("users")
 	findUserInDb := bson.D{
 		{
 			Key: "$or",
@@ -44,7 +49,7 @@ func Signup(c *fiber.Ctx) error {
 	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
 
 	if err != nil {
-
+		// si no exiaste crealo
 		if err == mongo.ErrNoDocuments {
 			passwordHash, err := helpers.HashPassword(newUser.Password)
 
@@ -67,7 +72,7 @@ func Signup(c *fiber.Ctx) error {
 			modelNewUser.Instagram = newUser.Instagram
 			modelNewUser.Twitter = newUser.Twitter
 			modelNewUser.Youtube = newUser.Youtube
-
+			// incertar usuario
 			user, err := GoMongoDBCollUsers.InsertOne(context.TODO(), modelNewUser)
 
 			if err != nil {
@@ -81,6 +86,7 @@ func Signup(c *fiber.Ctx) error {
 			})
 
 		} else {
+			// server error
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "Internal Server Error",
 				"err":     err,
