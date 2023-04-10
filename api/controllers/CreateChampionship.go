@@ -6,6 +6,7 @@ import (
 	"backend/api/validator"
 	"backend/database"
 	"context"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -54,6 +55,8 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.Prize = championshipsValidate.Prize
 	modelChampionships.Entry = championshipsValidate.Entry
 	modelChampionships.Requirements = championshipsValidate.Requirements
+	modelChampionships.CreatedAt = time.Now()
+	modelChampionships.UpdatedAt = time.Now()
 
 	Championshipdb := Database.Collection("championship")
 

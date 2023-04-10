@@ -7,7 +7,7 @@ import (
 )
 
 type Championships struct {
-	ID            string               `bson:"_id,omitempty"`
+	ID            string               `json:"id" bson:"_id,omitempty"`
 	Creator       primitive.ObjectID   `json:"creator"`
 	Description   string               `json:"description"`
 	Name          string               `json:"name"`

@@ -3,7 +3,7 @@ package models
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type UserModel struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Avatar       string             `json:"avatar"`
 	FullName     string             `json:"FullName"`
 	NameUser     string             `json:"NameUser"`
