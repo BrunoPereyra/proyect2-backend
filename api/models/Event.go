@@ -7,16 +7,16 @@ import (
 )
 
 type Championships struct {
-	ID            string               `bson:"_id,omitempty"`
-	Creator       primitive.ObjectID   `bson:"creator"`
-	Description   string               `bson:"description"`
-	Name          string               `bson:"name"`
-	Prize         string               `bson:"prize"`
-	Entry         float64              `bson:"entry"`
-	Requirements  string               `bson:"requirements"`
-	Applicants    []primitive.ObjectID `bson:"applicants"`
-	Participants  []primitive.ObjectID `bson:"participants"`
-	CurrentStatus string               `bson:"current_status"`
-	CreatedAt     time.Time            `bson:"created_at"`
-	UpdatedAt     time.Time            `bson:"updated_at"`
+	ID            string               `json:"_id,omitempty"`
+	Creator       primitive.ObjectID   `json:"creator"`
+	Description   string               `json:"description"`
+	Name          string               `json:"name"`
+	Prize         string               `json:"prize"`
+	Entry         float64              `json:"entry"`
+	Requirements  string               `json:"requirements"`
+	Applicants    []primitive.ObjectID `json:"applicants"`
+	Participants  []primitive.ObjectID `json:"participants"`
+	CurrentStatus string               `json:"current_status"`
+	CreatedAt     time.Time            `json:"created_at"`
+	UpdatedAt     time.Time            `json:"updated_at"`
 }

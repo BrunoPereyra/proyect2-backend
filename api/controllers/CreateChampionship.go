@@ -55,7 +55,7 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.Entry = championshipsValidate.Entry
 	modelChampionships.Requirements = championshipsValidate.Requirements
 
-	Championshipdb := Database.Collection("Championship")
+	Championshipdb := Database.Collection("championship")
 
 	event, err := Championshipdb.InsertOne(context.TODO(), modelChampionships)
 	if err == nil {
