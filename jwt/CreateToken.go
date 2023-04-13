@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"backend/api/models"
+	"backend/models"
 	"log"
 	"os"
 	"time"
