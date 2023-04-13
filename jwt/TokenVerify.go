@@ -13,6 +13,7 @@ func parseToken(tokenString string) (*jwt.Token, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("godotenv error parseToken")
 	}
+	fmt.Println(tokenString)
 	TOKENPASSWORD := os.Getenv("TOKENPASSWORD")
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(TOKENPASSWORD), nil

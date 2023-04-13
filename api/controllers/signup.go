@@ -34,6 +34,10 @@ func Signup(c *fiber.Ctx) error {
 			"message": "StatusServiceUnavailable",
 		})
 	}
+	// password
+	passwordHashChan := make(chan string)
+	go helpers.HashPassword(newUser.Password, passwordHashChan)
+
 	// buscar usuario por name user or gmail
 	GoMongoDBCollUsers := Database.Collection("users")
 	findUserInDb := bson.D{
@@ -51,12 +55,11 @@ func Signup(c *fiber.Ctx) error {
 	if err != nil {
 		// si no exiaste crealo
 		if err == mongo.ErrNoDocuments {
-			passwordHash, err := helpers.HashPassword(newUser.Password)
 
-			if err != nil {
+			passwordHash := <-passwordHashChan
+			if passwordHash == "error" {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"message": "Internal Server Error",
-					"err":     err,
+					"message": "Internal Server Error hash",
 				})
 			}
 
