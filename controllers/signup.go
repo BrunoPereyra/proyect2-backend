@@ -1,12 +1,16 @@
 package controllers
 
 import (
+	"backend/config"
 	"backend/database"
 	"backend/helpers"
 	"backend/models"
 	"backend/validator"
 	"context"
+	"fmt"
 
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,6 +19,12 @@ import (
 func Signup(c *fiber.Ctx) error {
 
 	var newUser validator.UserModelValidator
+	fileHeader, errfileHeader := c.FormFile("avatar")
+	if errfileHeader != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"messages": "Bad Request",
+		})
+	}
 	if err := c.BodyParser(&newUser); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"messages": "Bad Request",
@@ -62,10 +72,21 @@ func Signup(c *fiber.Ctx) error {
 					"message": "Internal Server Error hash",
 				})
 			}
+			file, _ := fileHeader.Open()
 
+			ctx := context.Background()
+			cldService, _ := cloudinary.NewFromURL(config.CLOUDINARY_URL())
+			resp, _ := cldService.Upload.Upload(ctx, file, uploader.UploadParams{})
+			if passwordHash == "error" {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"message": "Internal Server Error hash",
+				})
+			}
+			avatarUrl := resp.SecureURL
 			var modelNewUser models.UserModel
+			fmt.Println(avatarUrl)
 
-			modelNewUser.Avatar = newUser.Avatar
+			modelNewUser.Avatar = avatarUrl
 			modelNewUser.FullName = newUser.FullName
 			modelNewUser.NameUser = newUser.NameUser
 			modelNewUser.PasswordHash = passwordHash
