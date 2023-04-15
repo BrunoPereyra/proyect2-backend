@@ -9,9 +9,9 @@ import (
 )
 
 func UseRoutes(app *fiber.App) {
-
 	app.Post("/signup", controllers.Signup)
 	app.Post("/login", controllers.Login)
+	app.Get("/Currentuser", middleware.UseExtractor(), controllers.Currentuser)
 
 	// ----- eventos ----
 	// user
