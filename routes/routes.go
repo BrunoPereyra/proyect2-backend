@@ -2,6 +2,7 @@ package routes
 
 import (
 	"backend/controllers"
+	"backend/controllers/Post"
 	"backend/controllers/champions"
 	"backend/middleware"
 
@@ -13,7 +14,9 @@ func UseRoutes(app *fiber.App) {
 	app.Post("/login", controllers.Login)
 	app.Get("/Currentuser", middleware.UseExtractor(), controllers.Currentuser)
 	//post
-	app.Post("/UploadPost", middleware.UseExtractor(), controllers.UploadPost)
+	app.Post("/UploadPost", middleware.UseExtractor(), Post.UploadPost)
+	app.Get("/getPost", Post.GetPost)
+
 	// ----- eventos ----
 	// user
 	app.Post("/CreateEvent", middleware.UseExtractor(), champions.CreateChampionship)
