@@ -59,7 +59,7 @@ func Signup(c *fiber.Ctx) error {
 			},
 		},
 	}
-	var findUserInDbExist models.UserModel
+	var findUserInDbExist models.User
 	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
 
 	if err != nil {
@@ -83,7 +83,7 @@ func Signup(c *fiber.Ctx) error {
 				})
 			}
 			avatarUrl := resp.SecureURL
-			var modelNewUser models.UserModel
+			var modelNewUser models.User
 			fmt.Println(avatarUrl)
 
 			modelNewUser.Avatar = avatarUrl

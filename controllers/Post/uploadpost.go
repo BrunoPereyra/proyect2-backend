@@ -66,7 +66,7 @@ func UploadPost(c *fiber.Ctx) error {
 	}
 	// crear
 
-	var newPost models.PostSchema
+	var newPost models.Post
 	newPost.UserID = UserCreator.ID
 	newPost.Status = PostBodyParser.Status
 	newPost.PostImage = PostImage

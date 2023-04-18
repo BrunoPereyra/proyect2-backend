@@ -2,7 +2,7 @@ package models
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-type UserModel struct {
+type User struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Avatar       string             `json:"avatar"`
 	FullName     string             `json:"FullName"`

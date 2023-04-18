@@ -42,7 +42,7 @@ func Login(c *fiber.Ctx) error {
 	findUserLogin := bson.D{
 		{Key: "nameuser", Value: DataForLogin.NameUser},
 	}
-	var result models.UserModel
+	var result models.User
 	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserLogin).Decode(&result)
 
 	if err != nil {

@@ -2,12 +2,10 @@ package Post
 
 import (
 	"backend/database"
-	"backend/models"
 	"context"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetPost(c *fiber.Ctx) error {
@@ -19,36 +17,50 @@ func GetPost(c *fiber.Ctx) error {
 			"message": "StatusServiceUnavailable",
 		})
 	}
-	collection := db.Collection("post")
 
-	// traer primeros Posts si esta vacio el el req
-	options := options.Find().
-		SetSort(bson.M{"createdat": 1}).
-		SetLimit(3)
+	// pipeline de agregación
+	pipeline := []bson.M{
+		{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "userid",
+				"foreignField": "_id",
+				"as":           "User",
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":           1,
+				"status":        1,
+				"postimage":     1,
+				"timestamp":     1,
+				"User._id":      1,
+				"User.nameuser": 1,
+				"User.email":    1,
+				"User.avatar":   1,
+			},
+		},
+	}
 
-	cursor, errfindChampions := collection.Find(context.TODO(), bson.M{}, options)
-
-	if errfindChampions != nil {
+	// ejecutar agregación
+	cursor, err := db.Collection("post").Aggregate(context.Background(), pipeline)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "StatusServiceUnavailable",
 		})
 	}
-	// Iterar el cursor para obtener los documentos paginados
-	var Posts []models.PostSchema
-	for cursor.Next(context.TODO()) {
-		var Post models.PostSchema
-		err := cursor.Decode(&Post)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "StatusServiceUnavailable",
-			})
-		}
-		Posts = append(Posts, Post)
+
+	// iterar el cursor para obtener los documentos
+	var results []bson.M
+	if err := cursor.All(context.Background(), &results); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "StatusServiceUnavailable",
+		})
 	}
 
 	// Devolver la respuesta de la funcion
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "ok",
-		"data":    Posts,
+		"data":    results,
 	})
 }

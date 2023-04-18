@@ -21,7 +21,7 @@ func Currentuser(c *fiber.Ctx) error {
 	findUser := bson.D{
 		{Key: "nameuser", Value: nameUser},
 	}
-	var user models.UserModel
+	var user models.User
 	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUser).Decode(&user)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

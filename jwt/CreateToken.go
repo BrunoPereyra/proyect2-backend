@@ -10,7 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func CreateToken(user models.UserModel) (string, error) {
+func CreateToken(user models.User) (string, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("godotenv.Load error")
 	}

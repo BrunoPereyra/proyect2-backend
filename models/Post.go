@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type PostSchema struct {
+type Post struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Status    string             `json:"status"`
 	PostImage string             `json:"PostImage,omitempty"`

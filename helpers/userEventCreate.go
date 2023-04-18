@@ -9,12 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func UserTMiddlExist(dataMiddleware string, db *mongo.Database) (models.UserModel, error) {
+func UserTMiddlExist(dataMiddleware string, db *mongo.Database) (models.User, error) {
 	GoMongoDBCollUsers := db.Collection("users")
 	find := bson.D{
 		{Key: "nameuser", Value: dataMiddleware},
 	}
-	var UserCreator models.UserModel
+	var UserCreator models.User
 	err := GoMongoDBCollUsers.FindOne(context.TODO(), find).Decode(&UserCreator)
 	if err != nil {
 
