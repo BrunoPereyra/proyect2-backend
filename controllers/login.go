@@ -70,5 +70,6 @@ func Login(c *fiber.Ctx) error {
 		"message": "Token created",
 		"token":   token,
 		"id":      result.ID,
+		"avatar":  result.Avatar,
 	})
 }
