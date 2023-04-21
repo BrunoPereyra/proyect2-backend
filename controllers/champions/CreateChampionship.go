@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func CreateChampionship(c *fiber.Ctx) error {
@@ -57,6 +58,8 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.Requirements = championshipsValidate.Requirements
 	modelChampionships.CreatedAt = time.Now()
 	modelChampionships.UpdatedAt = time.Now()
+	modelChampionships.Applicants = []primitive.ObjectID{}
+	modelChampionships.Participants = []primitive.ObjectID{}
 
 	Championshipdb := Database.Collection("championship")
 
