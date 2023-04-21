@@ -5,7 +5,6 @@ import (
 	"backend/helpers"
 	"backend/models"
 	"context"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,11 +12,10 @@ import (
 )
 
 type ChampionshipId struct {
-	Championship_id string `json:"Championship_id"`
+	ChampionshipID string `json:"Championship_id"`
 }
 
 func ApplyChampionship(c *fiber.Ctx) error {
-
 	var req ChampionshipId
 	err := c.BodyParser(&req)
 	if err != nil {
@@ -25,6 +23,7 @@ func ApplyChampionship(c *fiber.Ctx) error {
 			"message": "StatusBadRequest",
 		})
 	}
+	// conexión db
 	db, errdb := database.GoMongoDB()
 	if errdb != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -32,7 +31,7 @@ func ApplyChampionship(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parsear la solicitud de aplicación de JSON
+	// user existe token?
 	dataMiddleware := c.Context().UserValue("nameUser")
 	dataMiddlewareString, _ := dataMiddleware.(string)
 	user, err := helpers.UserTMiddlExist(dataMiddlewareString, db)
@@ -42,13 +41,14 @@ func ApplyChampionship(c *fiber.Ctx) error {
 			"message": "user not found",
 		})
 	}
-	id, errorID := primitive.ObjectIDFromHex(req.Championship_id)
+	// ChampionshipID de string a objectId
+	id, errorID := primitive.ObjectIDFromHex(req.ChampionshipID)
 	if errorID != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "id unrecognized",
 		})
 	}
-
+	// Championship al que aplica
 	var Championship models.Championships
 	findchampion := bson.D{
 		{Key: "_id", Value: id},
@@ -59,9 +59,8 @@ func ApplyChampionship(c *fiber.Ctx) error {
 	if errFindChampionship != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Championship not found"})
 	}
-
-	for i, ApplicantsId := range Championship.Applicants {
-		fmt.Println(i)
+	// existe en Applicants
+	for _, ApplicantsId := range Championship.Applicants {
 		if ApplicantsId == user.ID {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Ya has aplicado a este campeonato",
@@ -69,7 +68,16 @@ func ApplyChampionship(c *fiber.Ctx) error {
 
 		}
 	}
+	// existe en Participants
+	for _, ApplicantsId := range Championship.Participants {
+		if ApplicantsId == user.ID {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"message": "Ya estas participando en el campeonato",
+			})
 
+		}
+	}
+	// update del doumento
 	Championship.Applicants = append(Championship.Applicants, user.ID)
 	update := bson.M{
 		"$set": bson.M{

@@ -7,6 +7,8 @@ import (
 	"backend/models"
 	"backend/validator"
 	"context"
+	"mime/multipart"
+	"strings"
 	"time"
 
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -24,19 +26,12 @@ func UploadPost(c *fiber.Ctx) error {
 
 	}
 
+	// process image
+
 	fileHeader, _ := c.FormFile("PostImage")
-
-	var PostImage string
-	if fileHeader != nil {
-		file, _ := fileHeader.Open()
-
-		ctx := context.Background()
-		cldService, _ := cloudinary.NewFromURL(config.CLOUDINARY_URL())
-		resp, _ := cldService.Upload.Upload(ctx, file, uploader.UploadParams{})
-		PostImage = resp.SecureURL
-	} else {
-		PostImage = ""
-	}
+	PostImageChanel := make(chan string)
+	errChanel := make(chan error)
+	go Processimage(fileHeader, PostImageChanel, errChanel)
 
 	// validator
 	var PostBodyParser validator.UploadPostValidate
@@ -66,23 +61,55 @@ func UploadPost(c *fiber.Ctx) error {
 	}
 	// crear
 
-	var newPost models.Post
-	newPost.UserID = UserCreator.ID
-	newPost.Status = PostBodyParser.Status
-	newPost.PostImage = PostImage
-	newPost.TimeStamp = time.Now()
+	// PostImageChanel
+	for {
+		select {
+		case PostImage := <-PostImageChanel:
+			// insert post
+			var newPost models.Post
+			newPost.UserID = UserCreator.ID
+			newPost.Status = PostBodyParser.Status
+			newPost.PostImage = PostImage
+			newPost.TimeStamp = time.Now()
 
-	PostCollection := Database.Collection("post")
-	postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
+			PostCollection := Database.Collection("post")
+			postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
 
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Internal Server Error",
-			"err":     err,
-		})
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"message": "Internal Server Error",
+					"err":     err,
+				})
+			}
+			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				"message": "StatusOK",
+				"data":    postInset,
+			})
+		case err = <-errChanel:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "StatusInternalServerError",
+			})
+		}
+
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "StatusOK",
-		"data":    postInset,
-	})
+}
+func Processimage(fileHeader *multipart.FileHeader, PostImageChanel chan string, errChanel chan error) {
+	if fileHeader != nil {
+		file, _ := fileHeader.Open()
+
+		ctx := context.Background()
+		cldService, errcloudinary := cloudinary.NewFromURL(config.CLOUDINARY_URL())
+		if errcloudinary != nil {
+			errChanel <- errcloudinary
+		}
+		resp, errcldService := cldService.Upload.Upload(ctx, file, uploader.UploadParams{})
+
+		if errcldService != nil || !strings.HasPrefix(resp.SecureURL, "https://") {
+			errChanel <- errcldService
+		}
+
+		PostImageChanel <- resp.SecureURL
+	} else {
+		PostImageChanel <- ""
+	}
 }

@@ -13,8 +13,8 @@ import (
 )
 
 type ReqData struct {
-	UserID         string `json:"userID"`
-	ChampionshipID string `json:"championshipID"`
+	UserID         string `json:"user_id"`
+	ChampionshipID string `json:"Championship_id"`
 }
 
 func BecomeParticipant(c *fiber.Ctx) error {
@@ -27,22 +27,21 @@ func BecomeParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Internal Server Error"})
 	}
-
+	// user existe token?
 	dataMiddleware := c.Context().UserValue("nameUser")
 	dataMiddlewareString, _ := dataMiddleware.(string)
 	user, errUserTMiddlExist := helpers.UserTMiddlExist(dataMiddlewareString, db)
-
 	if errUserTMiddlExist != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "User not found"})
 	}
-
+	// ChampionshipID de string a objectId
 	idChampionship, errorID := primitive.ObjectIDFromHex(req.ChampionshipID)
 	if errorID != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "id StatusBadRequest",
 		})
 	}
-
+	// Championship existe?
 	var Championship models.Championships
 	findchampion := bson.D{
 		{Key: "_id", Value: idChampionship},
@@ -53,16 +52,18 @@ func BecomeParticipant(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Championship not found"})
 	}
 
+	// id del usuario de string a objectId
 	UserIDReq, errorID := primitive.ObjectIDFromHex(req.UserID)
 	if errorID != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "id StatusBadRequest",
 		})
 	}
+	// el usuario del token es el dueño del Championship?
 	if Championship.Creator != user.ID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Forbidden"})
 	}
-
+	// actualizar evento
 	update := bson.M{
 		"$pull": bson.M{
 			"applicants": UserIDReq,
@@ -72,7 +73,6 @@ func BecomeParticipant(c *fiber.Ctx) error {
 		},
 	}
 
-	fmt.Println(UserIDReq)
 	_, errUpdateOne := CollectionChampionship.UpdateOne(context.TODO(), findchampion, update)
 	if errUpdateOne != nil {
 		fmt.Println(errUpdateOne)
