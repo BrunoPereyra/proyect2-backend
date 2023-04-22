@@ -14,6 +14,7 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func UploadPost(c *fiber.Ctx) error {
@@ -71,6 +72,7 @@ func UploadPost(c *fiber.Ctx) error {
 			newPost.Status = PostBodyParser.Status
 			newPost.PostImage = PostImage
 			newPost.TimeStamp = time.Now()
+			newPost.Likes = []primitive.ObjectID{}
 
 			PostCollection := Database.Collection("post")
 			postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
@@ -98,18 +100,19 @@ func Processimage(fileHeader *multipart.FileHeader, PostImageChanel chan string,
 		file, _ := fileHeader.Open()
 
 		ctx := context.Background()
-		cldService, errcloudinary := cloudinary.NewFromURL(config.CLOUDINARY_URL())
+		ctx := context.Background()
+		cldService, errcloudinary:= cloudinary.NewFromURL(config.CLOUDINARY_URL())
 		if errcloudinary != nil {
-			errChanel <- errcloudinary
+			rrChanel <- errcloudinary
 		}
-		resp, errcldService := cldService.Upload.Upload(ctx, file, uploader.UploadParams{})
+	resp, errcldService := cldService.Upload.Upload(ctx, file, uploader.UploadParams{})
 
-		if errcldService != nil || !strings.HasPrefix(resp.SecureURL, "https://") {
-			errChanel <- errcldService
-		}
-
-		PostImageChanel <- resp.SecureURL
-	} else {
-		PostImageChanel <- ""
+		if errcldService != nil || strings.HasPrefix(resp.SecureURL, "https://") {
+			rrChanel <- errcldService
 	}
+
+		PostImaeChanel <- resp.SecureURL
+	} else {
+		ostImageChanel <- ""
+	
 }

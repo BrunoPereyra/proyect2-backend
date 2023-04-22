@@ -7,9 +7,10 @@ import (
 )
 
 type Post struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Status    string             `json:"status"`
-	PostImage string             `json:"PostImage,omitempty"`
-	TimeStamp time.Time          `json:"TimeStamp"`
-	UserID    primitive.ObjectID `json:"UserID"`
+	ID        primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
+	Status    string               `json:"status"`
+	PostImage string               `json:"PostImage,omitempty"`
+	TimeStamp time.Time            `json:"TimeStamp"`
+	UserID    primitive.ObjectID   `json:"UserID"`
+	Likes     []primitive.ObjectID `json:"Likes"`
 }

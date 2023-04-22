@@ -28,21 +28,25 @@ func parseToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ExtractDataFromToken(tokenString string) (string, error) {
+func ExtractDataFromToken(tokenString string) (string, string, error) {
 	// Primero, parsea el token
 
 	token, err := parseToken(tokenString)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	// Luego, accede a los claims del token para obtener los datos que necesitas
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", fmt.Errorf("Invalid claims")
+		return "", "", fmt.Errorf("Invalid claims")
 	}
 	nameUser, ok := claims["nameuser"].(string)
 	if !ok {
-		return "", fmt.Errorf("Invalid nameUser")
+		return "", "", fmt.Errorf("Invalid nameUser")
 	}
-	return nameUser, nil
+	_id, ok := claims["_id"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("Invalid nameUser")
+	}
+	return nameUser, _id, nil
 }

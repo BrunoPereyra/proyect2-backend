@@ -14,13 +14,14 @@ func UseExtractor() fiber.Handler {
 
 		token := strings.Replace(authHeader, "Bearer ", "", 1)
 
-		nameUser, err := jwt.ExtractDataFromToken(token)
+		nameUser, _id, err := jwt.ExtractDataFromToken(token)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"Message": "Unauthorized",
 			})
 		}
 		c.Context().SetUserValue("nameUser", nameUser)
+		c.Context().SetUserValue("_id", _id)
 		return c.Next()
 	}
 

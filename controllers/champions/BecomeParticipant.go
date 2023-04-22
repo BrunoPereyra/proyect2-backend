@@ -5,7 +5,6 @@ import (
 	"backend/helpers"
 	"backend/models"
 	"context"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -75,7 +74,6 @@ func BecomeParticipant(c *fiber.Ctx) error {
 
 	_, errUpdateOne := CollectionChampionship.UpdateOne(context.TODO(), findchampion, update)
 	if errUpdateOne != nil {
-		fmt.Println(errUpdateOne)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Internal Server Error"})
 	}
 

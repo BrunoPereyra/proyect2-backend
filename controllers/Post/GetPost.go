@@ -33,6 +33,7 @@ func GetPost(c *fiber.Ctx) error {
 				"_id":           1,
 				"status":        1,
 				"postimage":     1,
+				"Likes":         1,
 				"timestamp":     1,
 				"User._id":      1,
 				"User.nameuser": 1,
