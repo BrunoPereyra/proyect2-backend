@@ -1,18 +1,13 @@
 package Post
 
 import (
-	"backend/config"
 	"backend/database"
 	"backend/helpers"
 	"backend/models"
 	"backend/validator"
 	"context"
-	"mime/multipart"
-	"strings"
 	"time"
 
-	"github.com/cloudinary/cloudinary-go/v2"
-	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -32,7 +27,7 @@ func UploadPost(c *fiber.Ctx) error {
 	fileHeader, _ := c.FormFile("PostImage")
 	PostImageChanel := make(chan string)
 	errChanel := make(chan error)
-	go Processimage(fileHeader, PostImageChanel, errChanel)
+	go helpers.Processimage(fileHeader, PostImageChanel, errChanel)
 
 	// validator
 	var PostBodyParser validator.UploadPostValidate
@@ -94,25 +89,4 @@ func UploadPost(c *fiber.Ctx) error {
 		}
 
 	}
-}
-func Processimage(fileHeader *multipart.FileHeader, PostImageChanel chan string, errChanel chan error) {
-	if fileHeader != nil {
-		file, _ := fileHeader.Open()
-
-		ctx := context.Background()
-		ctx := context.Background()
-		cldService, errcloudinary:= cloudinary.NewFromURL(config.CLOUDINARY_URL())
-		if errcloudinary != nil {
-			rrChanel <- errcloudinary
-		}
-	resp, errcldService := cldService.Upload.Upload(ctx, file, uploader.UploadParams{})
-
-		if errcldService != nil || strings.HasPrefix(resp.SecureURL, "https://") {
-			rrChanel <- errcldService
-	}
-
-		PostImaeChanel <- resp.SecureURL
-	} else {
-		ostImageChanel <- ""
-	
 }
