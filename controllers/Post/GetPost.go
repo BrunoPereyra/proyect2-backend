@@ -46,8 +46,8 @@ func GetPost(c *fiber.Ctx) error {
 
 	// ejecutar agregación
 	cursor, err := db.Collection("post").Aggregate(context.Background(), pipeline)
+	fmt.Println("AAA")
 	if err != nil {
-		fmt.Println("AAA")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "StatusServiceUnavailable",
 		})
