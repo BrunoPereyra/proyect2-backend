@@ -17,10 +17,6 @@ func main() {
 	PORT := config.PORT()
 
 	routes.UseRoutes(app)
-	app.Get("/home", func(c *fiber.Ctx) error {
-		config.CLOUDINARY_URL()
-		return c.SendString(config.CLOUDINARY_URL())
-	})
 
 	if PORT == "" {
 		PORT = "3001"

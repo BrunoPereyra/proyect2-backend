@@ -7,7 +7,6 @@ import (
 	"backend/models"
 	"backend/validator"
 	"context"
-	"fmt"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -84,7 +83,6 @@ func Signup(c *fiber.Ctx) error {
 			}
 			avatarUrl := resp.SecureURL
 			var modelNewUser models.User
-			fmt.Println(avatarUrl)
 
 			modelNewUser.Avatar = avatarUrl
 			modelNewUser.FullName = newUser.FullName

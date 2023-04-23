@@ -1,4 +1,4 @@
-package champions
+package championshipAdmin
 
 import (
 	"backend/database"
