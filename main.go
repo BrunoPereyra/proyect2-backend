@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/config"
+	"backend/controllers/Post"
 	"backend/routes"
 	"log"
 
@@ -20,6 +21,8 @@ func main() {
 	app.Get("/home", func(c *fiber.Ctx) error {
 		return c.SendString("AAA")
 	})
+	app.Get("/getPost", Post.GetPost)
+
 	if PORT == "" {
 		PORT = "3001"
 	}
