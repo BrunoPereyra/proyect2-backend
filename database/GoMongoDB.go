@@ -14,9 +14,11 @@ func GoMongoDB() (*mongo.Database, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("ApplyURI db error")
 	}
-	APPLYURI := os.Getenv("APPLYURI")
-
-	clientOptions := options.Client().ApplyURI(APPLYURI)
+	MONGODB_URI := os.Getenv("MONGODB_URI")
+	if MONGODB_URI == "" {
+		log.Fatal("MONGODB_URI FATAL")
+	}
+	clientOptions := options.Client().ApplyURI(MONGODB_URI)
 
 	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
