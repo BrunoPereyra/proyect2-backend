@@ -54,10 +54,9 @@ func VoteForChampionship(c *fiber.Ctx) error {
 			"message": "Championship not found",
 		})
 	}
+
 	dataMiddleware := c.Context().UserValue("nameUser")
-
 	dataMiddlewareString, _ := dataMiddleware.(string)
-
 	user, errhelpers := helpers.UserTMiddlExist(dataMiddlewareString, db)
 
 	if errhelpers != nil {
@@ -69,18 +68,19 @@ func VoteForChampionship(c *fiber.Ctx) error {
 	for _, voter := range Championship.Voters {
 		if voter == user.ID {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-				"message": "StatusConflict",
+				"message": "you already voted",
 			})
 		}
 	}
+	// si el existe el usuario por el que vota en Votesoftheparticipants, ok = true
 	ParticipantTheUserVotesForOk, ok := Championship.Votesoftheparticipants[ParticipantTheUserVotesFor]
 	if ok {
 		ParticipantTheUserVotesForOk = append(ParticipantTheUserVotesForOk, user.ID)
 		Championship.Votesoftheparticipants[ParticipantTheUserVotesFor] = ParticipantTheUserVotesForOk
 
 	} else {
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-			"message": "StatusConflict",
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "el participante al que queres votar no existe",
 		})
 	}
 	Championship.Voters = append(Championship.Voters, user.ID)
@@ -96,8 +96,9 @@ func VoteForChampionship(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Internal Server Error",
 		})
+	} else {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message": "ok",
+		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "ok",
-	})
 }

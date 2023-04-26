@@ -57,7 +57,9 @@ func ApplyChampionship(c *fiber.Ctx) error {
 	errFindChampionship := CollectionChampionship.FindOne(context.TODO(), findchampion).Decode(&Championship)
 
 	if errFindChampionship != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Championship not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Championship not found",
+		})
 	}
 	// existe en Applicants
 	for _, ApplicantsId := range Championship.Applicants {
@@ -65,11 +67,10 @@ func ApplyChampionship(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Ya has aplicado a este campeonato",
 			})
-
 		}
 	}
 	// existe en Participants
-	for _, ApplicantsId := range Championship.Participants {
+	for _, ApplicantsId := range Championship.ParticipantsAwaitingForPayment {
 		if ApplicantsId == user.ID {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Ya estas participando en el campeonato",
@@ -87,11 +88,12 @@ func ApplyChampionship(c *fiber.Ctx) error {
 
 	_, err = CollectionChampionship.UpdateOne(context.TODO(), findchampion, update)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Internal Server Error"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Internal Server Error",
+		})
+	} else {
+		return c.JSON(fiber.Map{
+			"message": "Participant added successfully",
+		})
 	}
-
-	return c.JSON(fiber.Map{
-		"message": "Participant added successfully",
-	})
-
 }
