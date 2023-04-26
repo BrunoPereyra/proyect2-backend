@@ -5,7 +5,6 @@ import (
 	"backend/helpers"
 	"backend/models"
 	"context"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -80,7 +79,6 @@ func VoteForChampionship(c *fiber.Ctx) error {
 		Championship.Votesoftheparticipants[ParticipantTheUserVotesFor] = ParticipantTheUserVotesForOk
 
 	} else {
-		fmt.Println(Championship.Votesoftheparticipants)
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 			"message": "StatusConflict",
 		})
@@ -99,7 +97,7 @@ func VoteForChampionship(c *fiber.Ctx) error {
 			"message": "Internal Server Error",
 		})
 	}
-	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"message": "Internal Server Error",
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "ok",
 	})
 }

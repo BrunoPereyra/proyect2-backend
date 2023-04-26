@@ -24,8 +24,11 @@ func BecomeParticipant(c *fiber.Ctx) error {
 
 	db, err := database.GoMongoDB()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Internal Server Error"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Internal Server Error",
+		})
 	}
+
 	// user existe token?
 	dataMiddleware := c.Context().UserValue("nameUser")
 	dataMiddlewareString, _ := dataMiddleware.(string)
@@ -68,19 +71,18 @@ func BecomeParticipant(c *fiber.Ctx) error {
 	}
 
 	// si Championship.Votesoftheparticipants[user.ID] no existe
-	if _, ok := Championship.Votesoftheparticipants[user.ID]; !ok {
+
+	if _, ok := Championship.Votesoftheparticipants[UserIDReq]; !ok {
 		// actualizar evento
+		Championship.Participants = append(Championship.Participants, UserIDReq)
+		Championship.Votesoftheparticipants[UserIDReq] = []primitive.ObjectID{}
 		update := bson.M{
 			"$pull": bson.M{
 				"applicants": UserIDReq,
 			},
-			"$addToSet": bson.M{
-				"participants": UserIDReq,
-			},
 			"$set": bson.M{
-				"Votesoftheparticipants": bson.M{
-					user.ID.Hex(): []primitive.ObjectID{},
-				},
+				"Votesoftheparticipants": Championship.Votesoftheparticipants,
+				"participants":           Championship.Participants,
 			},
 		}
 
@@ -95,8 +97,8 @@ func BecomeParticipant(c *fiber.Ctx) error {
 			"message": "Participant added successfully",
 		})
 	}
-	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"message": "Internal Server Error",
+	return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+		"message": "StatusConflict",
 	})
 
 }
