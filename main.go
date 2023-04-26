@@ -21,5 +21,5 @@ func main() {
 	if PORT == "" {
 		PORT = "3001"
 	}
-	log.Fatal(app.Listen("0.0.0.0:" + PORT))
+	log.Fatal(app.Listen(":" + PORT))
 }

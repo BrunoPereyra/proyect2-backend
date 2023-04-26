@@ -62,22 +62,41 @@ func BecomeParticipant(c *fiber.Ctx) error {
 	if Championship.Creator != user.ID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Forbidden"})
 	}
-	// actualizar evento
-	update := bson.M{
-		"$pull": bson.M{
-			"applicants": UserIDReq,
-		},
-		"$addToSet": bson.M{
-			"participants": UserIDReq,
-		},
+	// inicializar Votesoftheparticipants
+	if Championship.Votesoftheparticipants == nil {
+		Championship.Votesoftheparticipants = make(map[primitive.ObjectID][]primitive.ObjectID)
 	}
 
-	_, errUpdateOne := CollectionChampionship.UpdateOne(context.TODO(), findchampion, update)
-	if errUpdateOne != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Internal Server Error"})
-	}
+	// si Championship.Votesoftheparticipants[user.ID] no existe
+	if _, ok := Championship.Votesoftheparticipants[user.ID]; !ok {
+		// actualizar evento
+		update := bson.M{
+			"$pull": bson.M{
+				"applicants": UserIDReq,
+			},
+			"$addToSet": bson.M{
+				"participants": UserIDReq,
+			},
+			"$set": bson.M{
+				"Votesoftheparticipants": bson.M{
+					user.ID.Hex(): []primitive.ObjectID{},
+				},
+			},
+		}
 
-	return c.JSON(fiber.Map{
-		"message": "Participant added successfully",
+		_, errUpdateOne := CollectionChampionship.UpdateOne(context.TODO(), findchampion, update)
+		if errUpdateOne != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Internal Server Error",
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "Participant added successfully",
+		})
+	}
+	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		"message": "Internal Server Error",
 	})
+
 }

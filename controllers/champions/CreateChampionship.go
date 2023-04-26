@@ -60,6 +60,8 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.UpdatedAt = time.Now()
 	modelChampionships.Applicants = []primitive.ObjectID{}
 	modelChampionships.Participants = []primitive.ObjectID{}
+	modelChampionships.Votesoftheparticipants = make(map[primitive.ObjectID][]primitive.ObjectID)
+	modelChampionships.Voters = []primitive.ObjectID{}
 
 	Championshipdb := Database.Collection("championship")
 
