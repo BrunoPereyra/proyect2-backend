@@ -24,6 +24,7 @@ func UseRoutes(app *fiber.App) {
 	app.Post("/CreateEvent", middleware.UseExtractor(), champions.CreateChampionship)
 	app.Post("/SearchChampions", middleware.UseExtractor(), champions.SearchChampions)
 	app.Post("/Vote", middleware.UseExtractor(), champions.VoteForChampionship)
+	app.Post("/AskForChampionship", champions.AskForChampionship)
 
 	app.Post("/ApplyChampionship", middleware.UseExtractor(), championshipAdmin.ApplyChampionship)
 	app.Post("/ParticipantsAwaitingForPayment", middleware.UseExtractor(), championshipAdmin.ParticipantsAwaitingForPayment)
