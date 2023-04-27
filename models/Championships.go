@@ -23,8 +23,13 @@ type Championships struct {
 	Applicants         []primitive.ObjectID `json:"applicants"`
 	AcceptedApplicants []primitive.ObjectID `json:"acceptedApplicants"`
 
-	ParticipantsWhoPaidTheEntrance []primitive.ObjectID `json:"participantsWhoPaidTheEntrance" bson:"participantsWhoPaidTheEntrance"`
+	ParticipantsWhoPaidTheEntrance []ParticipantsWhoPaidTheEntrance `json:"participantsWhoPaidTheEntrance" bson:"participantsWhoPaidTheEntrance"`
 
 	Votesoftheparticipants map[primitive.ObjectID][]primitive.ObjectID `json:"votesOfTheParticipants"`
 	Voters                 []primitive.ObjectID                        `json:"voters"`
+}
+
+type ParticipantsWhoPaidTheEntrance struct {
+	ID       primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	NameUser string             `json:"nameUser" bson:"nameUser,omitempty"`
 }

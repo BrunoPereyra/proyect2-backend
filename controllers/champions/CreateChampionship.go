@@ -62,7 +62,7 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.Applicants = []primitive.ObjectID{}
 	modelChampionships.AcceptedApplicants = []primitive.ObjectID{}
 
-	modelChampionships.ParticipantsWhoPaidTheEntrance = []primitive.ObjectID{}
+	modelChampionships.ParticipantsWhoPaidTheEntrance = []models.ParticipantsWhoPaidTheEntrance{}
 
 	modelChampionships.Votesoftheparticipants = make(map[primitive.ObjectID][]primitive.ObjectID)
 	modelChampionships.Voters = []primitive.ObjectID{}

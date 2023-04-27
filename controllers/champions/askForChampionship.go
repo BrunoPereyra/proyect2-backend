@@ -26,18 +26,19 @@ func AskForChampionship(c *fiber.Ctx) error {
 	var req Idchampionship
 	c.BodyParser(&req)
 
-	collection := db.Collection("championship")
+	collectionchampionship := db.Collection("championship")
 	id, errorID := primitive.ObjectIDFromHex(req.IDchampionship)
 	if errorID != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "StatusBadRequest",
 		})
 	}
+
 	find := bson.D{
 		{Key: "_id", Value: id},
 	}
 	var collectionChampionship models.Championships
-	errfindChampion := collection.FindOne(context.TODO(), find).Decode(&collectionChampionship)
+	errfindChampion := collectionchampionship.FindOne(context.TODO(), find).Decode(&collectionChampionship)
 
 	if errfindChampion != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -45,7 +46,6 @@ func AskForChampionship(c *fiber.Ctx) error {
 		})
 	}
 
-	// Devolver la respuesta de la funcion
 	fmt.Println(collectionChampionship)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "ok",
