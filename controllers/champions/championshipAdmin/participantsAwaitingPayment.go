@@ -66,14 +66,7 @@ func ParticipantsAwaitingForPayment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Forbidden"})
 	}
 
-	// if Championship.Votesoftheparticipants == nil {
-	// 	Championship.Votesoftheparticipants = make(map[primitive.ObjectID][]primitive.ObjectID)
-	// }
-	// si Championship.Votesoftheparticipants[user.ID] no existe
-
-	// Championship.Votesoftheparticipants[UserIDReq] = []primitive.ObjectID{}
-
-	for _, value := range Championship.ParticipantsAwaitingForPayment {
+	for _, value := range Championship.AcceptedApplicants {
 		if value == UserIDReq {
 			return c.Status(fiber.StatusOK).JSON(fiber.Map{
 				"message": "is already participating",
@@ -83,14 +76,13 @@ func ParticipantsAwaitingForPayment(c *fiber.Ctx) error {
 
 	// actualizar evento
 
-	Championship.ParticipantsAwaitingForPayment = append(Championship.ParticipantsAwaitingForPayment, UserIDReq)
+	Championship.AcceptedApplicants = append(Championship.AcceptedApplicants, UserIDReq)
 	update := bson.M{
 		"$pull": bson.M{
 			"applicants": UserIDReq,
 		},
 		"$set": bson.M{
-			// "Votesoftheparticipants": Championship.Votesoftheparticipants,
-			"participantsAwaitingForPayment": Championship.ParticipantsAwaitingForPayment,
+			"acceptedApplicants": Championship.AcceptedApplicants,
 		},
 	}
 

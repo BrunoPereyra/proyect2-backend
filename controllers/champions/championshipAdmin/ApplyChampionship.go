@@ -70,7 +70,7 @@ func ApplyChampionship(c *fiber.Ctx) error {
 		}
 	}
 	// existe en Participants
-	for _, ApplicantsId := range Championship.ParticipantsAwaitingForPayment {
+	for _, ApplicantsId := range Championship.AcceptedApplicants {
 		if ApplicantsId == user.ID {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"message": "Ya estas participando en el campeonato",

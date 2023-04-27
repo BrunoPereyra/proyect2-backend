@@ -58,8 +58,12 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.Requirements = championshipsValidate.Requirements
 	modelChampionships.CreatedAt = time.Now()
 	modelChampionships.UpdatedAt = time.Now()
+
 	modelChampionships.Applicants = []primitive.ObjectID{}
-	modelChampionships.ParticipantsAwaitingForPayment = []primitive.ObjectID{}
+	modelChampionships.AcceptedApplicants = []primitive.ObjectID{}
+
+	modelChampionships.ParticipantsWhoPaidTheEntrance = []primitive.ObjectID{}
+
 	modelChampionships.Votesoftheparticipants = make(map[primitive.ObjectID][]primitive.ObjectID)
 	modelChampionships.Voters = []primitive.ObjectID{}
 

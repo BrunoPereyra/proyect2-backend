@@ -20,8 +20,8 @@ type Championships struct {
 
 	CurrentStatus string `json:"current_status"`
 
-	Applicants                     []primitive.ObjectID `json:"applicants"`
-	ParticipantsAwaitingForPayment []primitive.ObjectID `json:"participantsAwaitingForPayment"`
+	Applicants         []primitive.ObjectID `json:"applicants"`
+	AcceptedApplicants []primitive.ObjectID `json:"acceptedApplicants"`
 
 	ParticipantsWhoPaidTheEntrance []primitive.ObjectID `json:"ParticipantsWhoPaidTheEntrance"`
 
