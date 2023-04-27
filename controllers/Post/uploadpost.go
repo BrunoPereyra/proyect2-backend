@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func UploadPost(c *fiber.Ctx) error {
@@ -66,7 +65,7 @@ func UploadPost(c *fiber.Ctx) error {
 			newPost.Status = PostBodyParser.Status
 			newPost.PostImage = PostImage
 			newPost.TimeStamp = time.Now()
-			newPost.Likes = []primitive.ObjectID{}
+			// newPost.Likes = []primitive.ObjectID{}
 
 			PostCollection := Database.Collection("post")
 			postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
