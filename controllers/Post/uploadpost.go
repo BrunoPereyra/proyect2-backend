@@ -13,6 +13,12 @@ import (
 )
 
 func UploadPost(c *fiber.Ctx) error {
+
+	// process image
+	fileHeader, _ := c.FormFile("PostImage")
+	PostImageChanel := make(chan string)
+	errChanel := make(chan error)
+	go helpers.Processimage(fileHeader, PostImageChanel, errChanel)
 	// database
 	Database, errDB := database.GoMongoDB()
 	if errDB != nil {
@@ -21,13 +27,6 @@ func UploadPost(c *fiber.Ctx) error {
 		})
 
 	}
-
-	// process image
-
-	fileHeader, _ := c.FormFile("PostImage")
-	PostImageChanel := make(chan string)
-	errChanel := make(chan error)
-	go helpers.Processimage(fileHeader, PostImageChanel, errChanel)
 
 	// validator
 	var PostBodyParser validator.UploadPostValidate
