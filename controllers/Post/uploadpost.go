@@ -27,7 +27,6 @@ func UploadPost(c *fiber.Ctx) error {
 		})
 
 	}
-
 	// validator
 	var PostBodyParser validator.UploadPostValidate
 	error := c.BodyParser(&PostBodyParser)
@@ -54,6 +53,7 @@ func UploadPost(c *fiber.Ctx) error {
 			"message": "user not found",
 		})
 	}
+
 	// crear
 
 	// PostImageChanel
@@ -70,7 +70,6 @@ func UploadPost(c *fiber.Ctx) error {
 
 			PostCollection := Database.Collection("post")
 			postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
-
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"message": "Internal Server Error",
