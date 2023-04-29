@@ -47,11 +47,11 @@ func UploadPost(c *fiber.Ctx) error {
 			"messages": "Bad Request",
 		})
 	}
-	// if PostBodyParser.Status == "" || len(PostBodyParser.Status) >= 100 {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-	// 		"messages": "es mayor a 100 o ` ` ",
-	// 	})
-	// }
+	if PostBodyParser.Status == "" || len(PostBodyParser.Status) >= 100 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"messages": "es mayor a 100 o ` ` ",
+		})
+	}
 	// PostImageChanel
 	for {
 		select {
