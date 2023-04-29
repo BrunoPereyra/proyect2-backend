@@ -1,24 +1,20 @@
 package database
 
 import (
+	"backend/config"
 	"context"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GoMongoDB() (*mongo.Database, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("ApplyURI db error")
-	}
-	MONGODB_URI := os.Getenv("MONGODB_URI")
-	if MONGODB_URI == "" {
+	URI := config.URI()
+	if URI == "" {
 		log.Fatal("MONGODB_URI FATAL")
 	}
-	clientOptions := options.Client().ApplyURI(MONGODB_URI)
+	clientOptions := options.Client().ApplyURI(URI)
 
 	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
@@ -36,4 +32,11 @@ func GoMongoDB() (*mongo.Database, error) {
 	}
 
 	return client.Database("goMoongodb"), nil
+}
+
+func Disconnect(Database *mongo.Database) {
+	err := Database.Client().Disconnect(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
 }

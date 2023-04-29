@@ -7,6 +7,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func URI() string {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("godotenv.Load error")
+	}
+	return os.Getenv("MONGODB_URI")
+
+}
 func PORT() string {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("godotenv.Load error")

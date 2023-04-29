@@ -4,11 +4,12 @@ import (
 	"backend/database"
 	"backend/helpers"
 	"backend/models"
-	"backend/validator"
 	"context"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func UploadPost(c *fiber.Ctx) error {
@@ -18,56 +19,52 @@ func UploadPost(c *fiber.Ctx) error {
 	PostImageChanel := make(chan string)
 	errChanel := make(chan error)
 	go helpers.Processimage(fileHeader, PostImageChanel, errChanel)
+
 	// database
-	Database, errDB := database.GoMongoDB()
-	if errDB != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
-
-	}
-	// validator
-	var PostBodyParser validator.UploadPostValidate
-	error := c.BodyParser(&PostBodyParser)
-	if error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"messages": "Bad Request",
-		})
-	}
-
-	UploadPostValidateErr := PostBodyParser.UploadPostValidate()
-	if UploadPostValidateErr != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"messages": "Bad Request",
-			"data":     UploadPostValidateErr,
-		})
-	}
-	// usuario existe?
-	dataMiddleware := c.Context().UserValue("nameUser")
-	dataMiddlewareString, _ := dataMiddleware.(string)
-
-	UserCreator, err := helpers.UserTMiddlExist(dataMiddlewareString, Database)
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
-			"message": "user not found",
+		log.Fatal(err)
+	}
+	defer db.Pool.Disconnect(context.Background())
+
+	database := db.Pool.Database("goMoongodb")
+	// exist user?
+	dataMiddleware := c.Context().UserValue("nameUser")
+	UserCreator := make(chan models.User)
+	errChanelUserTMiddlExist := make(chan error)
+
+	go helpers.UserTMiddlExist(dataMiddleware.(string), database, UserCreator, errChanelUserTMiddlExist)
+	PostCollection := database.Collection("post")
+
+	// validator
+	type PostBody struct {
+		Status string `bson:"Status"`
+	}
+	var PostBodyParser PostBody
+	errBodyParser := c.BodyParser(&PostBodyParser)
+	if errBodyParser != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"messages": "Bad Request",
 		})
 	}
-
-	// crear
-
+	// if PostBodyParser.Status == "" || len(PostBodyParser.Status) >= 100 {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"messages": "es mayor a 100 o ` ` ",
+	// 	})
+	// }
 	// PostImageChanel
 	for {
 		select {
 		case PostImage := <-PostImageChanel:
+			UserCreatorID := <-UserCreator
 			// insert post
 			var newPost models.Post
-			newPost.UserID = UserCreator.ID
+			newPost.UserID = UserCreatorID.ID
 			newPost.Status = PostBodyParser.Status
 			newPost.PostImage = PostImage
 			newPost.TimeStamp = time.Now()
-			// newPost.Likes = []primitive.ObjectID{}
+			newPost.Likes = []primitive.ObjectID{}
 
-			PostCollection := Database.Collection("post")
 			postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -79,11 +76,21 @@ func UploadPost(c *fiber.Ctx) error {
 				"message": "StatusOK",
 				"data":    postInset,
 			})
+
 		case err = <-errChanel:
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "StatusInternalServerError",
 			})
-		}
 
+		case errNotFound := <-errChanelUserTMiddlExist:
+			return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
+				"message": errNotFound.Error(),
+			})
+
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "StatusInternalServerError",
+			})
+		}
 	}
 }
