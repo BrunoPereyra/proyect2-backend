@@ -12,6 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type PostBody struct {
+	Status string `bson:"Status"`
+}
+
 func UploadPost(c *fiber.Ctx) error {
 
 	// process image
@@ -37,9 +41,6 @@ func UploadPost(c *fiber.Ctx) error {
 	PostCollection := database.Collection("post")
 
 	// validator
-	type PostBody struct {
-		Status string `bson:"Status"`
-	}
 	var PostBodyParser PostBody
 	errBodyParser := c.BodyParser(&PostBodyParser)
 	if errBodyParser != nil {
@@ -52,6 +53,7 @@ func UploadPost(c *fiber.Ctx) error {
 			"messages": "es mayor a 100 o ` ` ",
 		})
 	}
+
 	// PostImageChanel
 	for {
 		select {
@@ -67,6 +69,7 @@ func UploadPost(c *fiber.Ctx) error {
 
 			postInset, err := PostCollection.InsertOne(context.TODO(), newPost)
 			if err != nil {
+
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"message": "Internal Server Error",
 					"err":     err,
@@ -78,6 +81,7 @@ func UploadPost(c *fiber.Ctx) error {
 			})
 
 		case err = <-errChanel:
+
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "StatusInternalServerError",
 			})
@@ -87,10 +91,7 @@ func UploadPost(c *fiber.Ctx) error {
 				"message": errNotFound.Error(),
 			})
 
-		default:
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": "StatusInternalServerError",
-			})
 		}
 	}
+
 }
