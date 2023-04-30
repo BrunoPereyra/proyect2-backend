@@ -36,7 +36,7 @@ func Login(c *fiber.Ctx) error {
 	}
 	defer db.Pool.Disconnect(context.Background())
 
-	databaseGoMongodb := db.Pool.Database("goMongodb")
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
 	// user exist?
 	GoMongoDBCollUsers := databaseGoMongodb.Collection("users")
