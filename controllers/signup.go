@@ -67,7 +67,7 @@ func Signup(c *fiber.Ctx) error {
 
 	if errCollUsers != nil {
 		// si no exiaste crealo
-		if err == mongo.ErrNoDocuments {
+		if errCollUsers == mongo.ErrNoDocuments {
 
 			passwordHash := <-passwordHashChan
 			if passwordHash == "error" {
@@ -108,7 +108,7 @@ func Signup(c *fiber.Ctx) error {
 						"message": user,
 					})
 
-				case err = <-errChanel:
+				case <-errChanel:
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"message": "avatarUrl error",
 					})
