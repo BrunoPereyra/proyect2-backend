@@ -6,6 +6,7 @@ import (
 	"backend/models"
 	"backend/validator"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,16 +42,17 @@ func Signup(c *fiber.Ctx) error {
 	// password
 	passwordHashChan := make(chan string)
 	go helpers.HashPassword(newUser.Password, passwordHashChan)
-
-	Database, errDB := database.GoMongoDB()
-	if errDB != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+	// db
+	db, err := database.NewMongoDB(10)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
 	// buscar usuario por name user or gmail
-	GoMongoDBCollUsers := Database.Collection("users")
+	GoMongoDBCollUsers := databaseGoMongodb.Collection("users")
 	findUserInDb := bson.D{
 		{
 			Key: "$or",
@@ -61,9 +63,9 @@ func Signup(c *fiber.Ctx) error {
 		},
 	}
 	var findUserInDbExist models.User
-	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
+	errCollUsers := GoMongoDBCollUsers.FindOne(context.TODO(), findUserInDb).Decode(&findUserInDbExist)
 
-	if err != nil {
+	if errCollUsers != nil {
 		// si no exiaste crealo
 		if err == mongo.ErrNoDocuments {
 

@@ -5,6 +5,7 @@ import (
 	"backend/helpers"
 	"backend/models"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,17 +25,18 @@ func ApplyChampionship(c *fiber.Ctx) error {
 		})
 	}
 	// conexión db
-	db, errdb := database.GoMongoDB()
-	if errdb != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "StatusInternalServerError",
-		})
+	db, err := database.NewMongoDB(10)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
 	// user existe token?
 	dataMiddleware := c.Context().UserValue("nameUser")
-	dataMiddlewareString, _ := dataMiddleware.(string)
-	user, err := helpers.UserTMiddlExist(dataMiddlewareString, db)
+	UserCreator := make(chan models.User)
+	errChanelUserTMiddlExist := make(chan error)
+	go helpers.UserTMiddlExist(dataMiddleware.(string), databaseGoMongodb, UserCreator, errChanelUserTMiddlExist)
 
 	if err != nil {
 		return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
@@ -53,7 +55,7 @@ func ApplyChampionship(c *fiber.Ctx) error {
 	findchampion := bson.D{
 		{Key: "_id", Value: id},
 	}
-	CollectionChampionship := db.Collection("championship")
+	CollectionChampionship := databaseGoMongodb.Collection("championship")
 	errFindChampionship := CollectionChampionship.FindOne(context.TODO(), findchampion).Decode(&Championship)
 
 	if errFindChampionship != nil {
@@ -62,12 +64,20 @@ func ApplyChampionship(c *fiber.Ctx) error {
 		})
 	}
 	// existe en Applicants
-	for _, ApplicantsId := range Championship.Applicants {
-		if ApplicantsId == user.ID {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "Ya has aplicado a este campeonato",
-			})
+	var user models.User
+	select {
+	case user = <-UserCreator:
+		for _, ApplicantsId := range Championship.Applicants {
+			if ApplicantsId == user.ID {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"message": "Ya has aplicado a este campeonato",
+				})
+			}
 		}
+	case <-errChanelUserTMiddlExist:
+		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
+			"message": "StatusNotAcceptable",
+		})
 	}
 	// existe en Participants
 	for _, ApplicantsId := range Championship.AcceptedApplicants {

@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,16 +18,17 @@ type Idchampionship struct {
 
 func AskForChampionship(c *fiber.Ctx) error {
 	// connect database
-	db, err := database.GoMongoDB()
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
+
 	var req Idchampionship
 	c.BodyParser(&req)
 
-	collectionchampionship := db.Collection("championship")
+	collectionchampionship := databaseGoMongodb.Collection("championship")
 	id, errorID := primitive.ObjectIDFromHex(req.IDchampionship)
 	if errorID != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

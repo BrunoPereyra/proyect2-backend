@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,14 +26,15 @@ func SearchUser(c *fiber.Ctx) error {
 		})
 	}
 
-	db, err := database.GoMongoDB()
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
 
-	collecionusers := db.Collection("users")
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
+
+	collecionusers := databaseGoMongodb.Collection("users")
 	options := options.Find().
 		SetLimit(4)
 	regex := primitive.Regex{Pattern: SearchUserData.Nameuser, Options: "i"}

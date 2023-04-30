@@ -30,22 +30,23 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	Database, errDB := database.GoMongoDB()
-	if errDB != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+	db, err := database.NewMongoDB(10)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+
+	databaseGoMongodb := db.Pool.Database("goMongodb")
 
 	// user exist?
-	GoMongoDBCollUsers := Database.Collection("users")
+	GoMongoDBCollUsers := databaseGoMongodb.Collection("users")
 	findUserLogin := bson.D{
 		{Key: "nameuser", Value: DataForLogin.NameUser},
 	}
 	var result models.User
-	err := GoMongoDBCollUsers.FindOne(context.TODO(), findUserLogin).Decode(&result)
+	errGoMongoDBCollUsers := GoMongoDBCollUsers.FindOne(context.TODO(), findUserLogin).Decode(&result)
 
-	if err != nil {
+	if errGoMongoDBCollUsers != nil {
 		if err == mongo.ErrNoDocuments {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"message": "User not found",

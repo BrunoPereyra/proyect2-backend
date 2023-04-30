@@ -30,15 +30,15 @@ func UploadPost(c *fiber.Ctx) error {
 		log.Fatal(err)
 	}
 	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
-	database := db.Pool.Database("goMoongodb")
 	// exist user?
 	dataMiddleware := c.Context().UserValue("nameUser")
 	UserCreator := make(chan models.User)
 	errChanelUserTMiddlExist := make(chan error)
+	go helpers.UserTMiddlExist(dataMiddleware.(string), databaseGoMongodb, UserCreator, errChanelUserTMiddlExist)
 
-	go helpers.UserTMiddlExist(dataMiddleware.(string), database, UserCreator, errChanelUserTMiddlExist)
-	PostCollection := database.Collection("post")
+	PostCollection := databaseGoMongodb.Collection("post")
 
 	// validator
 	var PostBodyParser PostBody
@@ -86,9 +86,9 @@ func UploadPost(c *fiber.Ctx) error {
 				"message": "StatusInternalServerError",
 			})
 
-		case errNotFound := <-errChanelUserTMiddlExist:
-			return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
-				"message": errNotFound.Error(),
+		case <-errChanelUserTMiddlExist:
+			return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
+				"message": "StatusNotAcceptable",
 			})
 
 		}

@@ -6,6 +6,7 @@ import (
 	"backend/models"
 	"backend/validator"
 	"context"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,23 +15,18 @@ import (
 
 func CreateChampionship(c *fiber.Ctx) error {
 
-	Database, errDB := database.GoMongoDB()
-	if errDB != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+	db, err := database.NewMongoDB(10)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
 	// usuario del middleware existe?
 	dataMiddleware := c.Context().UserValue("nameUser")
-	dataMiddlewareString, _ := dataMiddleware.(string)
-
-	UserCreator, err := helpers.UserTMiddlExist(dataMiddlewareString, Database)
-	if err != nil {
-		return c.Status(fiber.StatusNonAuthoritativeInformation).JSON(fiber.Map{
-			"message": "user not found",
-		})
-	}
+	UserCreatorChan := make(chan models.User)
+	errChanelUserTMiddlExist := make(chan error)
+	go helpers.UserTMiddlExist(dataMiddleware.(string), databaseGoMongodb, UserCreatorChan, errChanelUserTMiddlExist)
 
 	// creacion de championshipsValidate
 	var championshipsValidate validator.ChampionshipsValidate
@@ -39,12 +35,19 @@ func CreateChampionship(c *fiber.Ctx) error {
 			"message": "Bad Request",
 		})
 	}
-
-	championshipsValidate.Creator = UserCreator.ID
-	if err := championshipsValidate.ChampionshipsValidate(); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Bad Request",
-			"error":   err.Error(),
+	var UserCreator models.User
+	select {
+	case UserCreator = <-UserCreatorChan:
+		championshipsValidate.Creator = UserCreator.ID
+		if err := championshipsValidate.ChampionshipsValidate(); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"message": "Bad Request",
+				"error":   err.Error(),
+			})
+		}
+	case <-errChanelUserTMiddlExist:
+		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
+			"message": "StatusNotAcceptable",
 		})
 	}
 
@@ -67,7 +70,7 @@ func CreateChampionship(c *fiber.Ctx) error {
 	modelChampionships.Votesoftheparticipants = make(map[primitive.ObjectID][]primitive.ObjectID)
 	modelChampionships.Voters = []primitive.ObjectID{}
 
-	Championshipdb := Database.Collection("championship")
+	Championshipdb := databaseGoMongodb.Collection("championship")
 
 	event, err := Championshipdb.InsertOne(context.TODO(), modelChampionships)
 	if err == nil {

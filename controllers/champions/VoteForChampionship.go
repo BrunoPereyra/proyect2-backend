@@ -5,6 +5,7 @@ import (
 	"backend/helpers"
 	"backend/models"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,13 +30,20 @@ func VoteForChampionship(c *fiber.Ctx) error {
 			"message": "id unrecognized",
 		})
 	}
-	db, errDB := database.GoMongoDB()
-	if errDB != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "server error",
-		})
+
+	db, err := database.NewMongoDB(10)
+	if err != nil {
+		log.Fatal(err)
 	}
-	collecionChampionship := db.Collection("championship")
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
+
+	dataMiddleware := c.Context().UserValue("nameUser")
+	UserCreator := make(chan models.User)
+	errChanelUserTMiddlExist := make(chan error)
+	go helpers.UserTMiddlExist(dataMiddleware.(string), databaseGoMongodb, UserCreator, errChanelUserTMiddlExist)
+
+	collecionChampionship := databaseGoMongodb.Collection("championship")
 
 	ChampionshipId, idChampionshipObjectIDFromHex := primitive.ObjectIDFromHex(vote.Championship)
 	if idChampionshipObjectIDFromHex != nil {
@@ -55,23 +63,22 @@ func VoteForChampionship(c *fiber.Ctx) error {
 		})
 	}
 
-	dataMiddleware := c.Context().UserValue("nameUser")
-	dataMiddlewareString, _ := dataMiddleware.(string)
-	user, errhelpers := helpers.UserTMiddlExist(dataMiddlewareString, db)
-
-	if errhelpers != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "id unrecognized",
+	var user models.User
+	select {
+	case user = <-UserCreator:
+		for _, voter := range Championship.Voters {
+			if voter == user.ID {
+				return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+					"message": "you already voted",
+				})
+			}
+		}
+	case <-errChanelUserTMiddlExist:
+		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
+			"message": "StatusNotAcceptable",
 		})
 	}
 
-	for _, voter := range Championship.Voters {
-		if voter == user.ID {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-				"message": "you already voted",
-			})
-		}
-	}
 	// si el existe el usuario por el que vota en Votesoftheparticipants, ok = true
 	ParticipantTheUserVotesForOk, ok := Championship.Votesoftheparticipants[ParticipantTheUserVotesFor]
 	if ok {

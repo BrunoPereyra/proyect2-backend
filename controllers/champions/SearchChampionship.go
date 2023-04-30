@@ -4,6 +4,7 @@ import (
 	"backend/database"
 	"backend/models"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,13 +18,14 @@ func SearchChampions(c *fiber.Ctx) error {
 			"message": "StatusBadRequest",
 		})
 	}
-	db, err := database.GoMongoDB()
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+		log.Fatal(err)
 	}
-	championshipCollecion := db.Collection("championship")
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
+
+	championshipCollecion := databaseGoMongodb.Collection("championship")
 	regex := primitive.Regex{Pattern: refChampionship, Options: "i"}
 	findChampionships := bson.D{
 		{Key: "name", Value: regex},

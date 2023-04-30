@@ -3,6 +3,7 @@ package Post
 import (
 	"backend/database"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,12 +12,12 @@ import (
 func GetPost(c *fiber.Ctx) error {
 
 	// connect database
-	db, err := database.GoMongoDB()
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
 	// pipeline de agregación
 	pipeline := []bson.M{
@@ -44,7 +45,7 @@ func GetPost(c *fiber.Ctx) error {
 	}
 
 	// ejecutar agregación
-	cursor, err := db.Collection("post").Aggregate(context.Background(), pipeline)
+	cursor, err := databaseGoMongodb.Collection("post").Aggregate(context.Background(), pipeline)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "StatusServiceUnavailable",

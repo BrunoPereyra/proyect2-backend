@@ -5,6 +5,7 @@ import (
 	"backend/helpers"
 	"backend/models"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,21 +23,19 @@ func ParticipantsAwaitingForPayment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Bad Request"})
 	}
 
-	db, err := database.GoMongoDB()
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Internal Server Error",
-		})
+		log.Fatal(err)
 	}
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
 
 	// user existe token?
 	dataMiddleware := c.Context().UserValue("nameUser")
-	dataMiddlewareString, _ := dataMiddleware.(string)
-	user, errUserTMiddlExist := helpers.UserTMiddlExist(dataMiddlewareString, db)
-	if errUserTMiddlExist != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "User not found"})
-	}
-	// ChampionshipID de string a objectId
+	UserCreator := make(chan models.User)
+	errChanelUserTMiddlExist := make(chan error)
+	go helpers.UserTMiddlExist(dataMiddleware.(string), databaseGoMongodb, UserCreator, errChanelUserTMiddlExist)
+
 	idChampionship, errorID := primitive.ObjectIDFromHex(req.ChampionshipID)
 	if errorID != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -48,7 +47,7 @@ func ParticipantsAwaitingForPayment(c *fiber.Ctx) error {
 	findchampion := bson.D{
 		{Key: "_id", Value: idChampionship},
 	}
-	CollectionChampionship := db.Collection("championship")
+	CollectionChampionship := databaseGoMongodb.Collection("championship")
 	errFindChampionship := CollectionChampionship.FindOne(context.TODO(), findchampion).Decode(&Championship)
 	if errFindChampionship != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Championship not found"})
@@ -62,8 +61,16 @@ func ParticipantsAwaitingForPayment(c *fiber.Ctx) error {
 		})
 	}
 	// el usuario del token es el dueño del Championship?
-	if Championship.Creator != user.ID {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Forbidden"})
+	var user models.User
+	select {
+	case user = <-UserCreator:
+		if Championship.Creator != user.ID {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Forbidden"})
+		}
+	case <-errChanelUserTMiddlExist:
+		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
+			"message": "StatusNotAcceptable",
+		})
 	}
 
 	for _, value := range Championship.AcceptedApplicants {

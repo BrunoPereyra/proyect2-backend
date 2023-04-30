@@ -4,6 +4,7 @@ import (
 	"backend/database"
 	"backend/models"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,13 +14,14 @@ import (
 func GetChampionships(c *fiber.Ctx) error {
 
 	// connect database
-	db, err := database.GoMongoDB()
+	db, err := database.NewMongoDB(10)
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"message": "StatusServiceUnavailable",
-		})
+		log.Fatal(err)
 	}
-	collection := db.Collection("championship")
+	defer db.Pool.Disconnect(context.Background())
+	databaseGoMongodb := db.Pool.Database("goMoongodb")
+
+	collection := databaseGoMongodb.Collection("championship")
 
 	// traer primeros campeonatos si esta vacio el el req
 	options := options.Find().
