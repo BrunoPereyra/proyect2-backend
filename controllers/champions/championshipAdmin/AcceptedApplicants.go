@@ -17,7 +17,7 @@ type ReqData struct {
 	ChampionshipID string `json:"Championship_id"`
 }
 
-func ParticipantsAwaitingForPayment(c *fiber.Ctx) error {
+func AcceptedApplicants(c *fiber.Ctx) error {
 	var req ReqData
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Bad Request"})

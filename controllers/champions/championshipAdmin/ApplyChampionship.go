@@ -69,7 +69,7 @@ func ApplyChampionship(c *fiber.Ctx) error {
 	case user = <-UserCreator:
 		for _, ApplicantsId := range Championship.Applicants {
 			if ApplicantsId == user.ID {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 					"message": "Ya has aplicado a este campeonato",
 				})
 			}
