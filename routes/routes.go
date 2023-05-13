@@ -5,6 +5,7 @@ import (
 	"backend/controllers/Post"
 	"backend/controllers/champions"
 	"backend/controllers/champions/championshipAdmin"
+	"backend/controllers/champions/payment"
 	"backend/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,6 +29,8 @@ func UseRoutes(app *fiber.App) {
 
 	app.Post("/ApplyChampionship", middleware.UseExtractor(), championshipAdmin.ApplyChampionship)
 	app.Post("/AcceptedApplicants", middleware.UseExtractor(), championshipAdmin.AcceptedApplicants)
+
+	app.Get("/TicketPaymentConfimation", payment.TicketPaymentConfimation)
 
 	app.Post("/getEvent", champions.GetChampionshipSID)
 	app.Get("/getEvent", champions.GetChampionships)
