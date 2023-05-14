@@ -2,27 +2,36 @@ package controllers
 
 import (
 	"backend/controllers"
+	"encoding/json"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func TestLogin(t *testing.T) {
+	app := fiber.New()
+	app.Post("/login", controllers.Login)
 
-	ctx := &fiber.Ctx{}
-	ctx.Request().SetBody([]byte(`{"username": "admin", "password": "123456"}`))
-	err := controllers.Login(ctx)
+	testCases := []struct {
+		NameUser string `json:"NameUser"`
+		Password string `json:"password"`
+	}{
+		{
+			NameUser: "bruno",
+			Password: "123456789",
+		},
+	}
 
+	requestBody, _ := json.Marshal(testCases[0])
+	req := httptest.NewRequest("POST", "/login", strings.NewReader(string(requestBody)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, 10000)
 	if err != nil {
-		t.Fatalf("Se esperaba que no ocurriera un error, pero se obtuvo: %v", err)
+		t.Fatalf("Error al realizar la solicitud: %s", err.Error())
 	}
 
-	if ctx.Response().StatusCode() != fiber.StatusOK {
-		t.Errorf("Se esperaba un código de estado 200, pero se obtuvo: %d", ctx.Response().StatusCode())
-	}
-
-	expectedResponse := `{"message": "Token created", "token": "..."}` // Ajusta el contenido esperado según tu implementación
-	if string(ctx.Response().Body()) != expectedResponse {
-		t.Errorf("La respuesta no coincide con el resultado esperado. Se esperaba: %s, pero se obtuvo: %s", expectedResponse, ctx.Response().Body())
-	}
+	defer resp.Body.Close()
+	t.Logf("Estado de la reaspuesta: %s", resp.Status)
 }

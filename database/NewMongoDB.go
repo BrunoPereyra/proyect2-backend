@@ -1,9 +1,7 @@
 package database
 
 import (
-	"backend/config"
 	"context"
-	"log"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,11 +13,11 @@ type MongoDB struct {
 
 func NewMongoDB(poolSize uint64) (*MongoDB, error) {
 	// se crea la configuración del cliente con la URI y el tamaño de la pool
-	URI := config.URI()
-	if URI == "" {
-		log.Fatal("MONGODB_URI FATAL")
-	}
-	clientOptions := options.Client().ApplyURI(URI).SetMaxPoolSize(poolSize)
+	// URI := config.URI()
+	// if URI == "" {
+	// 	log.Fatal("MONGODB_URI FATAL")
+	// }
+	clientOptions := options.Client().ApplyURI("mongodb://mongo:5lTCWsoLzmGZYLT4BKYo@containers-us-west-11.railway.app:6786").SetMaxPoolSize(poolSize)
 
 	// se crea la pool de conexiones
 	pool, err := mongo.NewClient(clientOptions)
